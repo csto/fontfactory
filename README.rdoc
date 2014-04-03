@@ -1,0 +1,56 @@
+== README
+
+DIRECTION
+
+Overall
+- cut
+- paste into
+- import font
+
+Tools
+- pan
+- zoom
+- snap
+
+- select (objects) (supports multiple for delete and move/scale/rotate)
+- pointer (vertices) (select point)
+- pen (add / remove / close)
+- anchor
+- transform
+- combine
+- mask (clipping)
+
+Sidebar
+- character list
+  + add and delete
+- kerning
+
+Font Editing
+- reusable snippets
+- 
+
+Saving TTF
+- use TTX (python) or Heiroglyph (ruby)
+- considerations for hinting (autohinting?)
+
+vertices are bound on mousemove to update the corresponding path vertex
+points are bound similarly
+
+
+TODO
+
+pen
+  - add
+  - remove
+  
+direct
+  - move vertex
+  - move point
+  
+convert
+  - select vertex - add points and line
+  - move one
+  - drag out both
+  
+select
+  - bounding box box plus handles
