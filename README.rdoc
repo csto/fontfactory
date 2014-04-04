@@ -42,14 +42,33 @@ TODO
 pen
   - add
   - remove
+
+point lines
+outline
+  outline moves, then sets el's path to it on mouseup
   
-direct
-  - move point
+grid lines
+  set grid lines in global settings
   
-convert
-  - select vertex - add points and line
-  - move one
-  - drag out both
+global settings page
   
 select
-  - bounding box box plus handles
+  move on first click
+  corner boxes with drag events
+  rotate handle with drag event
+  
+character pallet
+  a - z etc
+  add character / remove
+  clicking letter creates new 
+  
+updating el path saves all paths to letters hash
+  also saves an undo
+  
+import from illustrator
+
+snap to grid
+  snap tolerance setting
+  
+hotkeys
+  
