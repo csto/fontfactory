@@ -44,7 +44,6 @@ pen
   - remove
   
 direct
-  - move vertex
   - move point
   
 convert
