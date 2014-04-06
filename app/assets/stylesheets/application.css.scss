@@ -27,7 +27,7 @@ line, .grid{
   stroke-width:1px;
   stroke:#00A0FF;
   &.light{
-    stroke:#FAFAFA;
+    stroke:#F7F7F7;
   }
 }
 
@@ -59,4 +59,22 @@ line, .grid{
 
 .tab-content{
   margin-left:200px;
+}
+
+#editor-wrapper{
+	&.pen{
+		cursor:url('../pen.png'), default;
+	}
+	&.pen-add{
+		cursor:url('../pen-add.png'), default;
+	}
+	&.pen-remove{
+		cursor:url('../pen-remove.png'), default;
+	}
+	&.convert{
+		cursor:url('../convert.png'), default;
+	}
+	&.pan{
+		cursor:pointer;
+	}
 }

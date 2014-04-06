@@ -1,13 +1,7 @@
 TODO
 
+settings change global settings
 
-outline
-  outline moves, then sets el's path to it on mouseup
-  
-settings
-  make settings global variables (window.name)
-  changing setting input sets global variable (also sends ajax)
-  
 select
   move on first click
   corner boxes with drag events
