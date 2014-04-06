@@ -3,4 +3,5 @@
 #= require turbolinks
 #= require snap
 #= require flatten
+#= require bootstrap
 #= require_tree .

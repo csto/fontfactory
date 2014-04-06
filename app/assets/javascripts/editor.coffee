@@ -1,13 +1,25 @@
+window.name = ''
+window.grid = 100
+window.xHeight = 400
+window.overshoot = 10
+window.ascentHeight = 700
+window.descentHeight = 300
+window.lineGap = 250
+
+
 tool = 'pen'
 el = null
 path = null
 vertex = null
-zoom = 1
+zoom = .5
 dragging = false
 creating = false
 point = null
 point1 = null
 point2 = null
+line1 = null
+line2 = null
+elPath = null
 draggingPoint = false
 bBox = null
 tBox = null
@@ -16,9 +28,30 @@ panX = null
 panY = null
 
 
+letters = [
+    name: '',
+    character: '',
+    unicode: '',
+    paths: '',
+    width: 1000
+  ]
+
+
 $ ->
   paper = Snap('#editor')
   g = paper.g()
+  
+  for i in [-100..100]
+    g.line(i * grid, -9999, i * grid, 9999).attr('class', 'grid light')
+    g.line(-9999, i * grid, 9999, i * grid).attr('class', 'grid light')
+  
+  g.line(0, -9999, 0, 9999).attr('class', 'grid grid-left')
+  g.line(-9999, 0, 9999, 0).attr('class', 'grid grid-top')
+  g.line(-9999, 1000, 9999, 1000).attr('class', 'grid grid-bottom')
+  g.line(-9999, 700, 9999, 700).attr('class', 'grid grid-ascent')
+  g.line(-9999, 300, 9999, 300).attr('class', 'grid grid-x-height')
+  g.line(1000, -9999, 1000, 9999).attr('class', 'grid grid-width')
+    
   
   $('#zoom-in').click ->
     oldZoom = zoom
@@ -33,6 +66,8 @@ $ ->
   $('.tool').click ->
     creating = false
     tool = $(this).data("tool")
+    $('.current').removeClass('current')
+    $(this).addClass('current')
   
   $('#editor').mousedown (e) ->
     if !draggingPoint
@@ -111,12 +146,6 @@ $ ->
     selectEl()
     vertex = Snap.select("#vertex#{vnum}")
     createPoints()
-      
-  paperZoom = (oldZoom, z) ->
-    z = z / oldZoom
-    g.transform("s#{z},#{z}")
-    flattenG()
-    
   
   selectDown = (e, x, y) ->
     deselect()
@@ -174,8 +203,11 @@ $ ->
     point = null
     point1 = null
     point2 = null
+    line1 = null
+    line2 = null
     $('circle').remove()
     $('rect').remove()
+    $('line').remove()
     
   selectEl = ->
     if el
@@ -210,7 +242,7 @@ $ ->
       
   directMove = (x, y) ->
     if vertex
-      set = Snap.set(vertex, point1, point2)
+      set = Snap.set(vertex, point1, point2, line1, line2)
       
       diffX = x - vertex.asPX("x") - 3
       diffY = y - vertex.asPX("y") - 3
@@ -225,6 +257,8 @@ $ ->
       setTransform(vertex)
       setTransform(point1)
       setTransform(point2)
+      setTransform(line1)
+      setTransform(line2)
         
   setTransform = (element) ->
     t = element.transform()
@@ -242,6 +276,14 @@ $ ->
       element.attr(
           cx: element.asPX("cx") + t.globalMatrix.e,
           cy: element.asPX("cy") + t.globalMatrix.f
+        )
+        
+    if element.type == 'line'
+      element.attr(
+          x1: element.asPX("x1") + t.globalMatrix.e,
+          y1: element.asPX("y1") + t.globalMatrix.f,
+          x2: element.asPX("x2") + t.globalMatrix.e,
+          y2: element.asPX("y2") + t.globalMatrix.f
         )
           
     element.transform("t0,0")
@@ -281,6 +323,53 @@ $ ->
           ->
             draggingPoint = false
         )
+        
+      setLines()
+      
+  # setElPath = ->
+  #   if el
+  #     if elPath
+  #       elPath.attr('path', path)
+  #     else
+  #       elPath = g.path(path).attr('class', 'el-path')
+  #         
+  #     el.after(elPath)
+      
+  setLines = ->  
+    if vertex
+      if line1
+        line1.attr(
+            x1: point1.asPX('cx'),
+            y1: point1.asPX('cy'),
+            x2: vertex.asPX('x') + 3,
+            y2: vertex.asPX('y') + 3
+          )
+      else
+        line1 = g.line(
+            point1.asPX('cx'),
+            point1.asPX('cy'),
+            vertex.asPX('x') + 3,
+            vertex.asPX('y') + 3
+          )
+          
+      if line2
+        line2.attr(
+            x1: point2.asPX('cx'),
+            y1: point2.asPX('cy'),
+            x2: vertex.asPX('x') + 3,
+            y2: vertex.asPX('y') + 3
+          )
+      else
+        line2 = g.line(
+            point2.asPX('cx'),
+            point2.asPX('cy'),
+            vertex.asPX('x') + 3,
+            vertex.asPX('y') + 3
+          )
+          
+      el.after(line1)
+      el.after(line2)
+      
       
   pointDrag = (dx, dy, x, y, e, point) ->
     vnum = vertex.data("vertex")
@@ -306,6 +395,7 @@ $ ->
         path[vnum][4] = y
       
     el.attr("path", path)
+    setLines()
   
   penDown = (e, x, y) ->
     if !el
@@ -320,6 +410,10 @@ $ ->
     convertMove(x, y)
     
   penUp = ->
+    
+  removePath = ->
+    el.remove()
+    deselect()
 
     
   addOrRemoveVertex = (e, x, y) ->
@@ -327,33 +421,36 @@ $ ->
     if selection && selection.type == 'rect'
       vertex = selection
       
-      vnum = vertex.data("vertex")
-      newPath = []
+      if path.length < 4
+        removePath()
+      else      
+        vnum = vertex.data("vertex")
+        newPath = []
     
-      for item, index in path
-        if index != vnum
-          newPath.push(item)
+        for item, index in path
+          if index != vnum
+            newPath.push(item)
       
-      if vnum == 1
-        path = newPath
-        path[0][1] = path[1][1]
-        path[0][2] = path[1][2]
-        updateVertex(
-            vertex,
-            path[1][3], 
-            path[1][4], 
-            path[2][1], 
-            path[2][2], 
-            path[1][5], 
-            path[1][6]
-          )
-      else
-        newPath[vnum][1] = path[vnum][1]
-        newPath[vnum][2] = path[vnum][2]
-        path = newPath
+        if vnum == 1
+          path = newPath
+          path[0][1] = path[1][1]
+          path[0][2] = path[1][2]
+          updateVertex(
+              vertex,
+              path[1][3], 
+              path[1][4], 
+              path[2][1], 
+              path[2][2], 
+              path[1][5], 
+              path[1][6]
+            )
+        else
+          newPath[vnum][1] = path[vnum][1]
+          newPath[vnum][2] = path[vnum][2]
+          path = newPath
       
-      el.attr("path", path )
-      selectEl()
+        el.attr("path", path )
+        selectEl()
             
     else
       n1 = g.path([["M", x - 3, y], ["L", x + 3, y]])
@@ -427,6 +524,8 @@ $ ->
           vertex.asPX("y") + 3
         )
       
+      setLines()
+      
     
   updateVertex = (vertex, bX, bY, aX, aY, x, y) ->
     vnum = vertex.data("vertex")
@@ -480,3 +579,12 @@ $ ->
   pathArray = (el) ->
     path = Snap.path.toAbsolute(el.attr("path"))
     path
+    
+  paperZoom = (oldZoom, z) ->
+    z = z / oldZoom
+    g.transform("s#{z},#{z}")
+    flattenG()
+    
+  paperZoom(1, zoom)
+  g.transform("t50.5,50.5")
+  flattenG()

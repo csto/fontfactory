@@ -6,9 +6,7 @@ path{
 }
 
 svg{
-  background:#FAFAFA;
-  width:1000px;
-  height:500px;
+  background:white;
 }
 
 rect{
@@ -23,4 +21,42 @@ rect{
 
 circle{
   fill:#00A0FF;
+}
+
+line, .grid{
+  stroke-width:1px;
+  stroke:#00A0FF;
+  &.light{
+    stroke:#FAFAFA;
+  }
+}
+
+.el-path{
+  fill:none;
+  stroke-width:1px;
+  stroke:#00A0FF;
+}
+
+#header{
+  .navbar{
+    .tool, .zoom{
+      background:gray;
+      padding:5px;
+      margin-left:5px;
+      float:left;
+      &.current{
+        background:black;
+        color:white;
+      }
+    }
+  }
+}
+
+#sidebar{
+  width:200px;
+  float:left;
+}
+
+.tab-content{
+  margin-left:200px;
 }

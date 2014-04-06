@@ -1,12 +1,42 @@
-.navbar
-  #select.tool{data: {tool: 'select'}} select
-  #direct.tool{data: {tool: 'direct'}} direct
-  #pen.tool{data: {tool: 'pen'}} pen
-  #convert.tool{data: {tool: 'convert'}} convert
-  #pan.tool{data: {tool: 'pan'}} pan
-  #zoom-in.zoom zoom in
-  #zoom-out.zoom zoom out
-  
+#sidebar
+  %ul.list-unstyled
+    %li
+      %a{href: '#settings', data: {toggle: 'tab'}} Settings
+    %li.active
+      %a{href: '#editor-wrapper', data: {toggle: 'tab'}} Editor
+    %li
+      Characters - remove editor
+    %li
+      Kerning
+    %li
+      Download
 
-.container
-  %svg#editor
+.tab-content
+  #settings.tab-pane
+    .form-group
+      %label Name
+      %input#name.form-control{type: 'text'}
+    .form-group
+      %label Grid
+      %input#grid.form-control{type: 'text', value: 100}
+    .form-group
+      %label X-Height
+      %input#x-height.form-control{type: 'text', value: 400}
+    .form-group
+      %label Overshoot
+      %input#overshoot.form-control{type: 'text', value: 10}
+    .form-group
+      %label Ascent Height
+      %input#ascent-height.form-control{type: 'number', value: 700, min: 0, max: 1000}
+    .form-group
+      %label Descent Height
+      %input#descent-height.form-control{type: 'text', value: 300, disabled: true}
+    .form-group
+      %label Total Height
+      %input#total-height.form-control{type: 'text', value: 1000, disabled: true}
+    .form-group
+      %label Line Gap
+      %input#line-gap.form-control{type: 'text', value: 250}
+  
+  #editor-wrapper.tab-pane.active
+    %svg#editor

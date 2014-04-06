@@ -1,56 +1,12 @@
-== README
-
-DIRECTION
-
-Overall
-- cut
-- paste into
-- import font
-
-Tools
-- pan
-- zoom
-- snap
-
-- select (objects) (supports multiple for delete and move/scale/rotate)
-- pointer (vertices) (select point)
-- pen (add / remove / close)
-- anchor
-- transform
-- combine
-- mask (clipping)
-
-Sidebar
-- character list
-  + add and delete
-- kerning
-
-Font Editing
-- reusable snippets
-- 
-
-Saving TTF
-- use TTX (python) or Heiroglyph (ruby)
-- considerations for hinting (autohinting?)
-
-vertices are bound on mousemove to update the corresponding path vertex
-points are bound similarly
-
-
 TODO
 
-pen
-  - add
-  - remove
 
-point lines
 outline
   outline moves, then sets el's path to it on mouseup
   
-grid lines
-  set grid lines in global settings
-  
-global settings page
+settings
+  make settings global variables (window.name)
+  changing setting input sets global variable (also sends ajax)
   
 select
   move on first click
@@ -58,17 +14,40 @@ select
   rotate handle with drag event
   
 character pallet
-  a - z etc
+  list of all common unicode in letter array
+  create editor class
+    setup new when clicking a letter
   add character / remove
-  clicking letter creates new 
+  clicking letter creates new
+  
+  updating a letter saves letters array to the backend through ajax
+  
+kerning / view font (defaults to abcdefghijkl etc, full list of characters)
+  text field for inputting desired characters
+  number field for font size
+  number field for line-height
+  select letter somehow?
   
 updating el path saves all paths to letters hash
-  also saves an undo
-  
+  also saves an undo  
+
 import from illustrator
 
 snap to grid
   snap tolerance setting
   
 hotkeys
+copy and paste
+
+download 
+  run ttx and send file
   
+import font
+
+subtract paths
+contract/expand path
+snippets
+
+new project
+manage projects
+
