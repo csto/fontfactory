@@ -1,17 +1,4 @@
-#sidebar
-  %ul.list-unstyled
-    %li
-      %a{href: '#settings', data: {toggle: 'tab'}} Settings
-    %li.active
-      %a{href: '#editor-wrapper', data: {toggle: 'tab'}} Editor
-    %li
-      Characters - remove editor
-    %li
-      Kerning
-    %li
-      Download
-
-.tab-content
+.tab-content{"ng-controller" => "appCtrl"}
   #settings.tab-pane
     .form-group
       %label Name
@@ -40,3 +27,23 @@
   
   #editor-wrapper.tab-pane.active.pen
     %svg#editor
+    
+    #header
+      #tools.navbar
+        #select.tool{"ng-click" => "setTool('select')"} select
+        #direct.tool{"ng-click" => "setTool('direct')"} direct
+        #pen.tool.current{"ng-class" => "{active: settings.tool == 'pen'}"} pen
+        #convert.tool{"ng-click" => "setTool('convert')"} convert
+        #pan.tool{"ng-click" => "setTool('pan')"} pan
+        #zoom-in.zoom zoom in
+        #zoom-out.zoom zoom out
+        #zoom.zoom 50%
+    
+    #characters
+      %div{"ng-repeat" => "c in characters"}
+        .character{"ng-if" => "c.path"}
+          %svg{width: '40px', height: '40px', "viewBox" => '0 0 1000 1000'}
+            {{c.path}}
+        .character{"ng-if" => "!c.path"}
+          {{c.character}}
+        

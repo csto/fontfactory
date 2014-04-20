@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="app">
 <head>
   <title>Ff</title>
   <%= stylesheet_link_tag    "application", media: "all", "data-turbolinks-track" => true %>
@@ -8,6 +8,7 @@
 </head>
 <body>
   <div id='wrap'>
+    <%= render 'layouts/sidebar' %>
     <%= render 'layouts/header' %>
     
     <%= yield %>

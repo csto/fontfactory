@@ -1,5 +1,18 @@
 @import "bootstrap";
 @import "font-awesome";
+@import "compass";
+
+html, body{
+  height:100%;
+}
+
+#wrap{
+  position:relative;
+  min-height: 100%;
+  width:100%;
+  overflow:hidden;
+  height: auto;
+}
 
 path{
   fill: black;
@@ -37,44 +50,103 @@ line, .grid{
   stroke:#00A0FF;
 }
 
-#header{
-  .navbar{
-    .tool, .zoom{
-      background:gray;
-      padding:5px;
-      margin-left:5px;
-      float:left;
-      &.current{
-        background:black;
-        color:white;
-      }
-    }
+#sidebar{
+  width:160px;
+  position:absolute;
+  top:0px;
+  left:0px;
+  bottom:0px;
+  background:#FAFAFA;
+  #logo{
+    height:50px;
+    background:#FF2B9F;
+  }
+  ul{
+    padding:10px;
   }
 }
 
-#sidebar{
-  width:200px;
-  float:left;
+.tab-content{
+  position:absolute;
+  top:0px;
+  left:160px;
+  right:0px;
+  bottom:0px;
 }
 
-.tab-content{
-  margin-left:200px;
-}
+
+
+
 
 #editor-wrapper{
+  @include user-select(none);
+  #tools{
+    
+  }
 	&.pen{
-		cursor:url('../pen.png'), default;
+    #editor{
+      cursor:url('../pen.png'), default;
+    }
 	}
 	&.pen-add{
-		cursor:url('../pen-add.png'), default;
+    #editor{
+      cursor:url('../pen-add.png'), default;
+    }
 	}
 	&.pen-remove{
-		cursor:url('../pen-remove.png'), default;
+    #editor{
+      cursor:url('../pen-remove.png'), default;
+    }
 	}
 	&.convert{
-		cursor:url('../convert.png'), default;
+    #editor{
+      cursor:url('../convert.png'), default;
+    }
 	}
 	&.pan{
-		cursor:pointer;
+    #editor{
+      cursor:pointer;
+    }
 	}
+  #header{
+    position:absolute;
+    left:0px;
+    height:50px;
+    .navbar{
+      .tool, .zoom{
+        background:gray;
+        padding:5px;
+        margin-left:5px;
+        float:left;
+        cursor:pointer;
+        &.current{
+          background:black;
+          color:white;
+        }
+      }
+    }
+  }
+  #characters{
+    position:absolute;
+    top:0px;
+    right:0px;
+    bottom:0px;
+    width:70px;
+    overflow:scroll;
+    background:#EEEEEE;
+    .character{
+      border:1px solid gray;
+      text-align:center;
+      width:50px;
+      height:50px;
+      margin:10px 0px 0px 10px;
+    }
+  }
+  #editor{
+    position:absolute;
+    top:0px;
+    left:0px;
+    right:70px;
+    bottom:0px;
+  }
 }

@@ -8,7 +8,6 @@ select
   rotate handle with drag event
   
 character pallet
-  list of all common unicode in letter array
   create editor class
     setup new when clicking a letter
   add character / remove
@@ -29,8 +28,7 @@ import from illustrator
 
 snap to grid
   snap tolerance setting
-  
-hotkeys
+
 copy and paste
 
 download 
@@ -40,6 +38,7 @@ import font
 
 subtract paths
 contract/expand path
+combine paths
 snippets
 
 new project
