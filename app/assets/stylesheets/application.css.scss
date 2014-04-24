@@ -80,6 +80,11 @@ line, .grid{
 
 #editor-wrapper{
   @include user-select(none);
+  position:absolute;
+  top:0px;
+  right:0px;
+  bottom:0px;
+  left:0px;
   #tools{
     
   }
@@ -135,18 +140,21 @@ line, .grid{
     overflow:scroll;
     background:#EEEEEE;
     .character{
-      border:1px solid gray;
+      border:1px solid #BCBCBC;
       text-align:center;
       width:50px;
       height:50px;
       margin:10px 0px 0px 10px;
+      &.current{
+        border:1px solid black;
+      }
     }
   }
   #editor{
     position:absolute;
     top:0px;
     left:0px;
-    right:70px;
-    bottom:0px;
+    width:3000px;
+    height:3000px;
   }
 }

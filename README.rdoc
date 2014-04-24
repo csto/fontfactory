@@ -1,5 +1,7 @@
 TODO
 
+fix zoom in out issues
+
 settings change global settings
 
 select

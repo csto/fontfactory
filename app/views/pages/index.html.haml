@@ -1,4 +1,11 @@
+
+
 .tab-content{"ng-controller" => "appCtrl"}
+  %hotkey{bind: "q", invoke: "setTool('select')"}
+  %hotkey{bind: "w", invoke: "setTool('direct')"}
+  %hotkey{bind: "e", invoke: "setTool('pen')"}
+  %hotkey{bind: "r", invoke: "setTool('convert')"}
+  %hotkey{bind: "t", invoke: "setTool('pan')"}
   #settings.tab-pane
     .form-group
       %label Name
@@ -25,25 +32,28 @@
       %label Line Gap
       %input#line-gap.form-control{type: 'text', value: 250}
   
-  #editor-wrapper.tab-pane.active.pen
-    %svg#editor
+  #editor-wrapper.tab-pane.active{class: "{{tool}}"}
+    #click-box{"ng-mousedown" => "mousedown($event)", "ng-mousemove" => "mousemove($event)", "ng-mouseup" => "mouseup($event)"}
+      %svg#editor{"vbox" => "{{viewbox.x}} {{viewbox.y}} {{viewbox.w}} {{viewbox.h}}"}
     
     #header
       #tools.navbar
-        #select.tool{"ng-click" => "setTool('select')"} select
-        #direct.tool{"ng-click" => "setTool('direct')"} direct
-        #pen.tool.current{"ng-class" => "{active: settings.tool == 'pen'}"} pen
-        #convert.tool{"ng-click" => "setTool('convert')"} convert
-        #pan.tool{"ng-click" => "setTool('pan')"} pan
-        #zoom-in.zoom zoom in
-        #zoom-out.zoom zoom out
-        #zoom.zoom 50%
+        #select.tool{"ng-click" => "setTool('select')", "ng-class" => "{current: tool == 'select'}"} select
+        #direct.tool{"ng-click" => "setTool('direct')", "ng-class" => "{current: tool == 'direct'}"} direct
+        #pen.tool{"ng-click" => "setTool('pen')", "ng-class" => "{current: tool == 'pen'}"} pen
+        #convert.tool{"ng-click" => "setTool('convert')", "ng-class" => "{current: tool == 'convert'}"} convert
+        #pan.tool{"ng-click" => "setTool('pan')", "ng-class" => "{current: tool == 'pan'}"} pan
+        #zoom-in.zoom{"ng-click" => "setZoom(2)"} zoom in
+        #zoom-out.zoom{"ng-click" => "setZoom(.5)"} zoom out
+        #zoom.zoom {{(zoom * 100) + '%'}}
     
     #characters
       %div{"ng-repeat" => "c in characters"}
-        .character{"ng-if" => "c.path"}
-          %svg{width: '40px', height: '40px', "viewBox" => '0 0 1000 1000'}
-            {{c.path}}
-        .character{"ng-if" => "!c.path"}
-          {{c.character}}
+        .character{"ng-click" => "setChar($index)", "ng-class" => "{current: char == $index}"}
+          %div{"ng-if" => "c.paths"}
+            %svg{width: '40px', height: '40px', "viewBox" => '0 0 1000 1000'}
+              %g{"ng-show" => "c.paths", "ng-repeat" => "path in c.paths track by $index"}
+                %path{"ng-attr-d" => "{{path}}"}
+          %div{"ng-if" => "!c.paths"}
+            {{c.character}}
         
