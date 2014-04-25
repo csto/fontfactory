@@ -3,10 +3,10 @@
     
   %ul.list-unstyled
     %li
-      %a{href: '#settings', data: {toggle: 'tab'}} Settings
+      %a{href: '#settings', "ng-click" => "setTab('settings')", "ng-class" => "{current: tab == 'settings'}"} Settings
     %li.active
-      %a{href: '#editor-wrapper', data: {toggle: 'tab'}} Editor
+      %a{href: '#editor', "ng-click" => "setTab('editor')", "ng-class" => "{current: tab == 'editor'}"} Editor
     %li
-      Kerning
+      %a{href: '#kerning', "ng-click" => "setTab('kerning')", "ng-class" => "{current: tab == 'kerning'}"} Kerning
     %li
       Download

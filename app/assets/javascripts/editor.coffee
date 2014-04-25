@@ -5,7 +5,7 @@ window.app.factory 'Edit', ($rootScope) ->
       $rootScope.tool = 'pen'
       $rootScope.zoom = .5
       $rootScope.char = char
-      $rootScope.viewbox = {x: -50.5, y: -50.5, w: 6000, h: 6000}
+      $rootScope.viewbox = {x: -101, y: -101, w: 6000, h: 6000}
       @character = $rootScope.characters[$rootScope.char]
       @el = null
       @elPath = null
@@ -118,8 +118,8 @@ window.app.factory 'Edit', ($rootScope) ->
       
     paperZoom: (z) ->
       $rootScope.zoom *= z
-      $rootScope.viewbox.x = Math.round($rootScope.viewbox.x) - (.5 / $rootScope.zoom)
-      $rootScope.viewbox.y = Math.round($rootScope.viewbox.y) - (.5 / $rootScope.zoom)
+      $rootScope.viewbox.x = $rootScope.viewbox.x / z  #Math.round($rootScope.viewbox.x) - (.5 / $rootScope.zoom)
+      $rootScope.viewbox.y = $rootScope.viewbox.y / z  #Math.round($rootScope.viewbox.y) - (.5 / $rootScope.zoom)
       $rootScope.viewbox.w /= z
       $rootScope.viewbox.h /= z
       
@@ -388,7 +388,7 @@ window.app.factory 'Edit', ($rootScope) ->
               y1: @point1.asPX('cy'),
               x2: @vertex.asPX('x') + (3 / $rootScope.zoom),
               y2: @vertex.asPX('y') + (3 / $rootScope.zoom)
-            )
+            ).attr('style', "stroke-width: #{1 / $rootScope.zoom}px")
         else
           @line1 = @g.line(
               @point1.asPX('cx'),

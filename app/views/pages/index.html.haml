@@ -1,12 +1,10 @@
-
-
 .tab-content{"ng-controller" => "appCtrl"}
   %hotkey{bind: "q", invoke: "setTool('select')"}
   %hotkey{bind: "w", invoke: "setTool('direct')"}
   %hotkey{bind: "e", invoke: "setTool('pen')"}
   %hotkey{bind: "r", invoke: "setTool('convert')"}
   %hotkey{bind: "t", invoke: "setTool('pan')"}
-  #settings.tab-pane
+  #settings.tab-pane{"ng-class" => "{active: tab == 'settings'}"}
     .form-group
       %label Name
       %input#name.form-control{type: 'text'}
@@ -32,7 +30,7 @@
       %label Line Gap
       %input#line-gap.form-control{type: 'text', value: 250}
   
-  #editor-wrapper.tab-pane.active{class: "{{tool}}"}
+  #editor-wrapper.tab-pane.active{class: "{{tool}}", "ng-class" => "{active: tab == 'editor'}"}
     #click-box{"ng-mousedown" => "mousedown($event)", "ng-mousemove" => "mousemove($event)", "ng-mouseup" => "mouseup($event)"}
       %svg#editor{"vbox" => "{{viewbox.x}} {{viewbox.y}} {{viewbox.w}} {{viewbox.h}}"}
     
@@ -57,3 +55,5 @@
           %div{"ng-if" => "!c.paths"}
             {{c.character}}
         
+  #kerning.tab-pane{"ng-class" => "{active: tab == 'kerning'}"}
+    Kerning

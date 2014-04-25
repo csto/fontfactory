@@ -1,5 +1,11 @@
 window.app = angular.module('app', ['drahak.hotkeys'])
 
+window.app.controller 'tabCtrl', ($scope) ->
+  $scope.tab = 'editor'
+  
+  $scope.setTab = (tab) ->
+    $scope.tab = tab
+
 window.app.controller 'appCtrl', ($scope, $rootScope, $timeout, Edit) ->
   $timeout ->
     $rootScope.edit = new Edit(1)

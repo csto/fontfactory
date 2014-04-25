@@ -1,20 +1,20 @@
 TODO
 
-fix zoom in out issues
+selected vertex (solid blue and has points)
+  keep selected on zoom
 
 settings change global settings
 
+direction matters!  Make function to flip direction.  Flip inside elements?
+
 select
-  move on first click
+  change from drag to mousedown/move/up event
+    select and move on first click
   corner boxes with drag events
   rotate handle with drag event
   
 character pallet
-  create editor class
-    setup new when clicking a letter
   add character / remove
-  clicking letter creates new
-  
   updating a letter saves letters array to the backend through ajax
   
 kerning / view font (defaults to abcdefghijkl etc, full list of characters)
@@ -23,8 +23,9 @@ kerning / view font (defaults to abcdefghijkl etc, full list of characters)
   number field for line-height
   select letter somehow?
   
-updating el path saves all paths to letters hash
-  also saves an undo  
+undos
+  add undo on save if paths have changed
+  add undo and redo hotkeys
 
 import from illustrator
 
@@ -32,13 +33,13 @@ snap to grid
   snap tolerance setting
 
 copy and paste
+delete hotkey
 
 download 
   run ttx and send file
   
 import font
 
-subtract paths
 contract/expand path
 combine paths
 snippets
