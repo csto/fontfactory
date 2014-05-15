@@ -50,47 +50,45 @@ line, .grid{
   stroke:#00A0FF;
 }
 
-#sidebar{
-  width:160px;
-  position:absolute;
-  top:0px;
-  left:0px;
-  bottom:0px;
-  background:#FAFAFA;
+#header{
+  border:0;
   #logo{
+    width:160px;
     height:50px;
     background:#FF2B9F;
   }
+}
+
+#sidebar{
+  width:160px;
+  position:fixed;
+  top:60px;
+  left:0px;
+  bottom:0px;
+  background:#FAFAFA;
   ul{
     padding:10px;
   }
 }
 
 .tab-content{
-  position:absolute;
-  top:0px;
-  left:160px;
-  right:0px;
-  bottom:0px;
+  margin-left:160px;
 }
-
-
-
 
 
 #editor-wrapper{
   @include user-select(none);
   position:absolute;
-  top:0px;
+  top:60px;
   right:0px;
   bottom:0px;
-  left:0px;
+  left:160px;
   #tools{
     
   }
 	&.pen{
     #editor{
-      cursor:url('../pen.png'), default;
+      cursor:asset-url('../pen.png'), default;
     }
 	}
 	&.pen-add{
@@ -156,5 +154,13 @@ line, .grid{
     left:0px;
     width:3000px;
     height:3000px;
+    #vertex{
+      fill:#00A0FF;
+    }
+  }
+  #kern{
+    width:500px;
+    height:200px;
+    background:#F8F8F8;
   }
 }

@@ -1,27 +1,93 @@
-window.app = angular.module('app', ['drahak.hotkeys'])
+window.app = angular.module('app', ['angular.ujs', 'ngResource', 'drahak.hotkeys', "ui.bootstrap"])
+
+window.app.factory 'Font', ($resource) ->
+  $resource(
+    "/fonts/:id.json", 
+    {id: "@id"},
+    {
+      get:
+        isArray: false
+        transformResponse: (data, headersGetter) ->
+          console.log "Response: converting from json to objects"
+          data = angular.fromJson(data)
+          chars = angular.fromJson(data.characters)
+          data.characters = chars
+          return data
+          
+      update: 
+        method: "PATCH"
+        # transformRequest: (data, headersGetter) ->
+        #   console.log 'Request: converting to json from objects'
+        #   chars = angular.toJson(data.characters)
+        #   data.characters = chars
+        #   data = angular.toJson(data)
+        #   return data
+          
+        # transformResponse: (data, headersGetter) ->
+        #   console.log 'Response: converting from json to objects'
+        #   console.log data + 'response'
+        #   data = angular.fromJson(data)
+        #   console.log data + 'test'
+        #   chars = angular.fromJson(data.characters)
+        #   data.characters = chars
+        #   console.log data
+        #   return data
+    }
+  )
 
 window.app.controller 'tabCtrl', ($scope) ->
   $scope.tab = 'editor'
   
   $scope.setTab = (tab) ->
     $scope.tab = tab
-
-window.app.controller 'appCtrl', ($scope, $rootScope, $timeout, Edit) ->
-  $timeout ->
-    $rootScope.edit = new Edit(1)
+    
+dropdownCTRL = ($scope) ->
   
-  $rootScope.characters = window.characters
+  $scope.status = isopen: false
+  
+  $scope.toggleDropdown = ($event) ->
+    $event.preventDefault()
+    $event.stopPropagation()
+    $scope.status.isopen = not $scope.status.isopen
+
+window.app.controller 'appCtrl', ($scope, $rootScope, $timeout, Edit, Kern, Font) ->
+  
+  # $rootScope.font = {}
+  # $rootScope.font.name = ''
+  # $rootScope.font.grid = 100
+  # $rootScope.font.xHeight = 400
+  # $rootScope.font.overshoot = 10
+  # $rootScope.font.ascentHeight = 700
+  # $rootScope.font.lineGap = 250
+  
   $rootScope.char = 1
+  $rootScope.fontId = $scope.fontId
+  
+  $timeout ->
+    Font.get(id: $scope.fontId, (font) ->
+        $rootScope.font = font
+        # $rootScope.font.name = 'test font'
+        # $rootScope.font.$update()
+        # $rootScope.font.characters = angular.fromJson($rootScope.font.characters)
+        $rootScope.edit = new Edit()
+        $rootScope.kern = new Kern()
+      )
+  #   $rootScope.edit = new Edit(1)
+  #   $rootScope.kern = new Kern()
+    
+  
+  $scope.createGrid = ->
+    $rootScope.edit.createGrid()
   
   $scope.setChar = (c) ->
     Snap.selectAll('#editor *').remove()
-    $rootScope.edit = new Edit(c)
+    $rootScope.char = c
+    $rootScope.edit = new Edit()
   
   $scope.setTool = (tool) ->
     $rootScope.edit.setTool(tool)
     
   $scope.setZoom = (z) ->
-    # newZoom = $rootScope.zoom * z
     $rootScope.edit.paperZoom(z)
     
   $scope.mousedown = (e) ->
@@ -32,6 +98,15 @@ window.app.controller 'appCtrl', ($scope, $rootScope, $timeout, Edit) ->
     
   $scope.mouseup = (e) ->
     $rootScope.edit.mouseup(e)
+    
+  $scope.undo = ->
+    $rootScope.edit.undo()
+    
+  $scope.redo = ->
+    $rootScope.edit.redo()
+    
+  $scope.updateKern = (letters) ->
+    $rootScope.kern.updateKern(letters)
       
     
 angular.module('appFilters', ['appCtrl']).filter 'character', ->

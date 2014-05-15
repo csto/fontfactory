@@ -1,16 +1,32 @@
 TODO
 
-selected vertex (solid blue and has points)
-  keep selected on zoom
+create guest account
+rails should redirect to your last font via cookie (projects ordered by last modified)
+if no cookie, create a font and redirect to it
 
-settings change global settings
+create guest
+creat font
+redirect to font via id
 
-direction matters!  Make function to flip direction.  Flip inside elements?
+Projects
+  load project
+    loads from cookie
+  delete
+New Project
+  saves cookie
+
+
+Finish Kerning
+Get download working right
+
+
+Function for flipping
+  dropdown with flip direction
 
 select
-  change from drag to mousedown/move/up event
-    select and move on first click
   corner boxes with drag events
+    drag moves corner box (also moves other rects and bbox)
+    scales @el (el.width / bbox.width) etc
   rotate handle with drag event
   
 character pallet
@@ -21,7 +37,9 @@ kerning / view font (defaults to abcdefghijkl etc, full list of characters)
   text field for inputting desired characters
   number field for font size
   number field for line-height
-  select letter somehow?
+  letters at top (select one - box around)
+  input field generates each letter with default kerning
+  grab kern line to change it
   
 undos
   add undo on save if paths have changed
@@ -34,6 +52,7 @@ snap to grid
 
 copy and paste
 delete hotkey
+arrow hotkeys (move one point)
 
 download 
   run ttx and send file
@@ -44,6 +63,34 @@ contract/expand path
 combine paths
 snippets
 
+
+
 new project
 manage projects
 
+
+### Models
+
+User
+  email
+  password
+  
+Project
+  has_many :fonts
+
+Font
+  has_many :characters
+  name
+  grid
+  xHeight
+  overshoot
+  ascentHeight
+  lineGap
+
+Character
+  unicode
+  character
+  decimal
+  name
+  paths
+  relative_paths

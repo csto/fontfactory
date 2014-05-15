@@ -1,0 +1,8 @@
+= link_to 'New Font', fonts_path, data: {method: :post}
+
+%table
+  - @fonts.each do |font|
+    %tr
+      %td= font.name
+      %td= link_to 'Load', font_path(font)
+      %td= link_to 'Remove', font, data: {method: :delete, confirm: "Are you sure you want to permanently remove this font?"}

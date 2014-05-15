@@ -1,12 +1,12 @@
-window.app.factory 'Edit', ($rootScope) ->
+window.app.factory 'Edit', ($rootScope, $http, $resource) ->
   class Edit
-    constructor: (char) ->  
+    constructor: () ->  
     
       $rootScope.tool = 'pen'
       $rootScope.zoom = .5
-      $rootScope.char = char
       $rootScope.viewbox = {x: -101, y: -101, w: 6000, h: 6000}
-      @character = $rootScope.characters[$rootScope.char]
+      
+      @character = $rootScope.font.characters[$rootScope.char]
       @el = null
       @elPath = null
       @path = null
@@ -19,33 +19,36 @@ window.app.factory 'Edit', ($rootScope) ->
       @line1 = null
       @line2 = null
       
+      @pathCount = 0
+      @undos = []
+      @undoCount= 0
+      
       @convertDragging = false
       @draggingPoint = false
+      @draggingCorner
       @bBox = null
       @tBox = null
       @vnum = null
-      @panX = null
-      @panY = null
+      @mouseX = null
+      @mouseY = null
 
-      # $('#editor').html('')
       @paper = Snap('#editor')
       @g = @paper.g()
       @grids = @g.g()
-  
+      @createGrid()
+      
+    createGrid: ->
+      @grids.selectAll('*').remove()
       for i in [-20..30]
-        @grids.line(i * window.grid, -9999, i * window.grid, 9999).attr('class', 'grid light')
-        @grids.line(-9999, i * window.grid, 9999, i * window.grid).attr('class', 'grid light')
+        @grids.line(i * $rootScope.font.grid, -9999, i * $rootScope.font.grid, 9999).attr('class', 'grid light')
+        @grids.line(-9999, i * $rootScope.font.grid, 9999, i * $rootScope.font.grid).attr('class', 'grid light')
   
       @grids.line(0, -9999, 0, 9999).attr('class', 'grid grid-left')
       @grids.line(-9999, 0, 9999, 0).attr('class', 'grid grid-top')
       @grids.line(-9999, 1000, 9999, 1000).attr('class', 'grid grid-bottom')
       @grids.line(-9999, 700, 9999, 700).attr('class', 'grid grid-ascent')
-      @grids.line(-9999, 300, 9999, 300).attr('class', 'grid grid-x-height')
+      @grids.line(-9999, $rootScope.font.x_height, 9999, $rootScope.font.x_height).attr('class', 'grid grid-x-height')
       @grids.line(1000, -9999, 1000, 9999).attr('class', 'grid grid-width')
-    
-      # @paperZoom(.5)
-      # @g.transform("t50.5,50.5")
-      # @flattenG()
       
       if @character.paths
         for path in @character.paths
@@ -53,7 +56,7 @@ window.app.factory 'Edit', ($rootScope) ->
         
       
     mousedown: (e) ->
-      if !@draggingPoint
+      if !@draggingPoint && !@draggingCorner
         @dragging = true
   
         x = (e.offsetX / $rootScope.zoom) + $rootScope.viewbox.x
@@ -80,8 +83,11 @@ window.app.factory 'Edit', ($rootScope) ->
       x = (e.offsetX / $rootScope.zoom) + $rootScope.viewbox.x
       y = (e.offsetY / $rootScope.zoom) + $rootScope.viewbox.y
   
-      if @dragging && !@draggingPoint
-        switch $rootScope.tool  
+      if @dragging && !@draggingPoint && !@draggingCorner
+        switch $rootScope.tool 
+          when 'select'
+            @selectMove(x, y)
+           
           when 'direct'
             @directMove(x, y)
   
@@ -95,25 +101,23 @@ window.app.factory 'Edit', ($rootScope) ->
             x = (e.offsetX / $rootScope.zoom)
             y = (e.offsetY / $rootScope.zoom)
             @panMove(x, y)
-      # else
-      #   if $rootScope.tool == 'pen' && @el && @creating
-      #     @setCursor(e, x, y)
+      else
+        if $rootScope.tool == 'pen' && @el && !@creating
+          @setCursor(e, x, y)
+        else
+          $rootScope.penClass = ''
   
   
     mouseup: (e) ->
       @dragging = false
       @convertDragging = false
   
+      if $rootScope.tool == 'select'
+        @selectUp()
+        
       if $rootScope.tool == 'direct'
         @directUp()
-  
-      # if $rootScope.tool == 'pen'
-      #   console.log 'ok'
-        # $('#editor-wrapper').removeClass('pen-add pen-remove')
-  
-      # if @tool == 'pan'
-      #   @panUp()
-        
+
       @save()
       
     paperZoom: (z) ->
@@ -125,65 +129,76 @@ window.app.factory 'Edit', ($rootScope) ->
       
       for el in Snap.selectAll('.grid, .el-path')
         el.attr('style', "stroke-width: #{1 / $rootScope.zoom}px")
-        
-      @selectEl()
+      
+      if @el && $rootScope.tool == 'select'
+        @tSelect()
+      else
+        @selectEl()
         
   
-    flattenG: ->
-      @el.attr("id", 'el') if @el
-      @elPath.remove() if @elPath
-      if @vertex
-        vnum = @vertex.data("vertex")
-  
-      Snap.selectAll('rect, circle').remove()
-      flatten(document.getElementById('editor'))
-      @el = Snap.select('#el')
-      @elPath = Snap.select('#elpath')
-        
-      @selectEl()
-      @vertex = Snap.select("#vertex#{vnum}")
-      @createPoints()
+    # flattenG: ->
+    #   @el.attr("id", 'el') if @el
+    #   @elPath.remove() if @elPath
+    #   if @vertex
+    #     vnum = @vertex.data("vertex")
+    #   
+    #   Snap.selectAll('rect, circle').remove()
+    #   flatten(document.getElementById('editor'))
+    #   @el = Snap.select('#el')
+    #   @elPath = Snap.select('#elpath')
+    #     
+    #   @selectEl()
+    #   @vertex = Snap.select("#vertex#{vnum}")
+    #   @createPoints()
     
     setTool: (tool) ->
       @creating = false
+      
       if $rootScope.tool == 'select'
-        @flattenG()  # this could be something more efficient
+        @clear()
+        if @el
+          @selectEl()
+        
       $rootScope.tool = tool
       if $rootScope.tool == 'select' && @el
         @tSelect()
         
     setCursor: (e, x, y) ->
+      $rootScope.penClass = ''
       selection = Snap.getElementByPoint(e.clientX, e.clientY)
     
       if selection.type == 'rect'
-        # $('#editor-wrapper').addClass('pen-remove')
+        $rootScope.penClass = 'pen-remove'
       else
         n1 = @g.path([["M", x - (3 / $rootScope.zoom), y], ["L", x + (3 / $rootScope.zoom), y]])
         n2 = @g.path([["M", x, y - (3 / $rootScope.zoom)], ["L", x, y + (3 / $rootScope.zoom)]])
         i1 = Snap.path.intersection(@el.attr("path"), n1)
         i2 = Snap.path.intersection(@el.attr("path"), n2)
-        i = null
+        n1.remove()
+        n2.remove()
+        i = undefined
         if i1.length > 0
           i = i1[0]
         if i2.length > 0
           i = i2[0]
+        if i != undefined
+          $rootScope.penClass = 'pen-add'
     
     panDown: (x, y) ->
-      @panX = x
-      @panY = y
+      @mouseX = x
+      @mouseY = y
     
     panMove: (x, y) ->
-      x = x - @panX
-      y = y - @panY
+      x = x - @mouseX
+      y = y - @mouseY
       # @g.transform("t#{x},#{y}}")
       $rootScope.viewbox.x = -x
       $rootScope.viewbox.y = -y
     
-    # panUp: ->
-    #   return false
-      # @flattenG()
-    
     selectDown: (e, x, y) ->
+      @mouseX = x
+      @mouseY = y
+      
       @deselect()
       selection = Snap.getElementByPoint(e.clientX, e.clientY)
     
@@ -193,53 +208,15 @@ window.app.factory 'Edit', ($rootScope) ->
         @tSelect()
     
     tSelect: ->
+      @clear()
+      
       bb = @el.getBBox()
     
-      bBox = @g.rect(bb.x, bb.y, bb.w, bb.h).attr('class', 'bb')
+      @bBox = @g.rect(bb.x, bb.y, bb.w, bb.h).attr('class', 'bb').attr('style', "stroke-width: #{1 / $rootScope.zoom}px")
     
-      bBox.drag(
-          (dx, dy, x, y, e) =>
-            @bBoxDrag(dx, dy, x, y, e, bBox)
-          ->
-          =>
-            for element in @tBox
-              @setTransform(element)
-            @setTransform(@el)
-            @path = Snap.path.toAbsolute(@el.attr("path"))
-        )
-    
-      tl = @g.rect(bb.x - (3 / $rootScope.zoom), bb.y - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-      tm = @g.rect(bb.cx, bb.y - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-      tr = @g.rect(bb.x + bb.w - (3 / $rootScope.zoom), bb.y - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-      ml = @g.rect(bb.x - (3 / $rootScope.zoom), bb.cy,(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-      mr = @g.rect(bb.x + bb.w - (3 / $rootScope.zoom), bb.cy,(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-      bl = @g.rect(bb.x - (3 / $rootScope.zoom), bb.y + bb.h - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-      bm = @g.rect(bb.cx, bb.y + bb.h - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-      br = @g.rect(bb.x + bb.w - (3 / $rootScope.zoom), bb.y + bb.h - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom))
-    
-      tr.drag(
-          (dx, dy, x, y, e) ->
-            @cornerDrag(dx, dy, x, y, bBox, tr)
-        )
-    
-      @tBox = Snap.set(bBox, tl, tm, tr, ml, mr, bl, bm, br)
-    
-    
-    bBoxDrag: (dx, dy, x, y, e, bBox) ->
-      dx = (dx / $rootScope.zoom) 
-      dy = (dy / $rootScope.zoom)
-    
-      @tBox.forEach (element) ->
-        element.transform("t#{dx},#{dy}")
-      @el.transform("t#{dx},#{dy}")
-    
-    cornerDrag: (dx, dy, x, y, bBox, tr) ->
-    
-    
-    deselect: ->
-      if @el
-        @el.attr("id", '')
-        @el = null
+      @createCorners()
+      
+    clear: ->
       @vertex = null
       @point = null
       @point1 = null
@@ -250,23 +227,126 @@ window.app.factory 'Edit', ($rootScope) ->
       Snap.selectAll('circle').remove()
       Snap.selectAll('rect').remove()
       Snap.selectAll('line:not(.grid)').remove()
+      
+    createCorners: ->
+      Snap.selectAll('.corner').remove()
+      bb = @bBox.getBBox()
+      @tl = @g.rect(bb.x - (3 / $rootScope.zoom), bb.y - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+      @tm = @g.rect(bb.cx - (3 / $rootScope.zoom), bb.y - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+      @tr = @g.rect(bb.x + bb.w - (3 / $rootScope.zoom), bb.y - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+      @ml = @g.rect(bb.x - (3 / $rootScope.zoom), bb.cy - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+      @mr = @g.rect(bb.x + bb.w - (3 / $rootScope.zoom), bb.cy - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+      @bl = @g.rect(bb.x - (3 / $rootScope.zoom), bb.y + bb.h - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+      @bm = @g.rect(bb.cx - (3 / $rootScope.zoom), bb.y + bb.h - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+      @br = @g.rect(bb.x + bb.w - (3 / $rootScope.zoom), bb.y + bb.h - (3 / $rootScope.zoom),(6 / $rootScope.zoom),(6 / $rootScope.zoom)).attr(class: 'corner', style: "stroke-width: #{1 / $rootScope.zoom}px")
+        
+      @tr.drag(
+          (dx, dy, x, y, e) =>
+            @cornerDrag(dx, dy, x, y, e, @tr)
+          =>
+            @draggingCorner = true
+            @width = @el.getBBox().w
+            @height = @el.getBBox().h
+          =>
+            @draggingCorner = false
+            @setTransform(@el)
+        )
+      
+      # this is giving the wrong scope for rect in @cornerDrag()
+      # for rect in [@tl, @tm, @tr, @ml, @mr, @bl, @bm, @br]
+      #   @rect = rect
+      #   rect.drag(
+      #       (dx, dy, x, y, e) =>
+      #         @cornerDrag(dx, dy, x, y, e, @rect)
+      #       =>
+      #         @draggingCorner = true
+      #         @width = @el.getBBox().w
+      #         @height = @el.getBBox().h
+      #       =>
+      #         @draggingCorner = false
+      #         @setTransform(@el)
+      #     )
+    
+      @tBox = Snap.set(@bBox, @tl, @tm, @tr, @ml, @mr, @bl, @bm, @br)
+      
+    cornerDrag: (dx, dy, x, y, e, rect) ->
+      x = (e.offsetX / $rootScope.zoom) + $rootScope.viewbox.x 
+      y = (e.offsetY / $rootScope.zoom) + $rootScope.viewbox.y
+      
+      bottom = @bBox.asPX('y') + @bBox.asPX('height')
+      right = @bBox.asPX('x') + @bBox.asPX('width')
+      # left = @bBox.asPX('x')
+      # width = @bBox.asPX('width')
+      # height = @bBox.asPX('height')
+      
+      # drag the selected corner
+      rect.attr(x: x, y: y)
+      
+      if rect == @tl
+        @bBox.attr(
+            width: x,
+            height: bottom - y,
+            x: x
+          )
+      
+      if rect == @tr
+        @bBox.attr(
+            width: x - @bBox.asPX('x'),
+            height: bottom - y,
+            y: y
+          )
+      
+      @createCorners()
+      
+      bb = @el.getBBox()
+      w = (x - bb.x) / @width
+      h = (bottom - y) / @height
+      @el.transform("s#{w},#{h},#{@bBox.asPX('x')}, #{bottom}")
+    
+    
+    selectMove: (x, y) ->
+      x = x - @mouseX
+      y = y - @mouseY
+      
+      @tBox.forEach (element) ->
+        element.transform("t#{x},#{y}")
+      @el.transform("t#{x},#{y}")
+      
+    selectUp: ->
+      if @el
+        @setTransform(@el)
+      if @tBox
+        @tBox.forEach (element) =>
+          @setTransform(element)
+    
+    deselect: ->
+      if @el
+        @el.attr("id", '')
+        @el = null
+        
+      @clear()
     
     selectEl: ->
       if @el
-        @vertex = null
         Snap.selectAll('circle').remove()
         Snap.selectAll('rect').remove()
         Snap.selectAll('line:not(.grid)').remove()
+        if @vertex
+          vnum = @vertex.data("vertex")
         @path = @pathArray(@el)
         @setElPath()
         for item, index in @path
           if item[0] == "C" && index != @path.length - 1
-            @g.rect(
+            vertex = @g.rect(
                 item[5] - (3 / $rootScope.zoom),
                 item[6] - (3 / $rootScope.zoom),
                 (6 / $rootScope.zoom),
                 (6 / $rootScope.zoom)
               ).data("vertex", index).attr(id: "vertex#{index}", style: "stroke-width: #{1 / $rootScope.zoom}px")
+            if index == vnum
+              vertex.attr('id', 'vertex')
+              @createPoints()
+        
     
     directDown: (e, x, y) ->
       selection = Snap.getElementByPoint(e.clientX, e.clientY)
@@ -281,6 +361,9 @@ window.app.factory 'Edit', ($rootScope) ->
     
       if selection.type == 'rect'
         @vertex = selection
+        Snap.select('#vertex').attr('id', '') if Snap.select('#vertex')
+        @vertex.attr('id', 'vertex')
+        
         @createPoints()
         @dragging = true
     
@@ -309,7 +392,8 @@ window.app.factory 'Edit', ($rootScope) ->
       t = element.transform()
     
       if element.type == 'path'
-        element.attr("path", Snap.path.map(element.attr("path"), t.localMatrix))
+        @path = Snap.path.map(element.attr("path"), t.localMatrix)
+        element.attr("path", @path)
     
       if element.type == 'rect'
         element.attr(
@@ -465,6 +549,8 @@ window.app.factory 'Edit', ($rootScope) ->
       selection = Snap.getElementByPoint(e.clientX, e.clientY)
       if selection.type == 'rect'
         @vertex = selection
+        Snap.select('#vertex').attr('id', '') if Snap.select('#vertex')
+        @vertex.attr('id', 'vertex')
     
         if @path.length < 4
           @removePath()
@@ -501,6 +587,8 @@ window.app.factory 'Edit', ($rootScope) ->
         n2 = @g.path([["M", x, y - (3 / $rootScope.zoom)], ["L", x, y + (3 / $rootScope.zoom)]])
         i1 = Snap.path.intersection(@el.attr("path"), n1)
         i2 = Snap.path.intersection(@el.attr("path"), n2)
+        n1.remove()
+        n2.remove()
         i = undefined
         if i1.length > 0
           i = i1[0]
@@ -543,6 +631,9 @@ window.app.factory 'Edit', ($rootScope) ->
       selection = Snap.getElementByPoint(e.clientX, e.clientY)
       if selection.type == 'rect'
         @vertex = selection
+        Snap.select('#vertex').attr('id', '') if Snap.select('#vertex')
+        @vertex.attr('id', 'vertex')
+        
         @convertDragging = true
         @createPoints()
     
@@ -601,12 +692,13 @@ window.app.factory 'Edit', ($rootScope) ->
       @setElPath()  
     
     createPath: (x, y) ->
+      @pathCount++
       @creating = true
       @el = @g.path([
           ["M", x, y],
           ["C", x, y, x, y, x, y],
           ["C", x, y, x, y, x, y]
-        ])
+        ]) #.attr(class: "el#{@pathCount}")
       @path = @pathArray()
       @setElPath()
       @vertex = @g.rect(
@@ -615,6 +707,8 @@ window.app.factory 'Edit', ($rootScope) ->
           (6 / $rootScope.zoom),
           (6 / $rootScope.zoom)
         ).data("vertex", 1).attr(style: "stroke-width: #{1 / $rootScope.zoom}px")
+      Snap.select('#vertex').attr('id', '') if Snap.select('#vertex')
+      @vertex.attr('id', 'vertex')
     
     appendToPath: (x, y) ->
       @path = @pathArray(@el)
@@ -625,13 +719,15 @@ window.app.factory 'Edit', ($rootScope) ->
         )
       endVertex[1] = x
       endVertex[2] = y
-      @el.attr("path", @path)
+      @el.attr(path: @path)
       @setElPath()
       @vertex = @g.rect(
           x - (3 / $rootScope.zoom),
           y - (3 / $rootScope.zoom),
           (6 / $rootScope.zoom),(6 / $rootScope.zoom)
         ).data("vertex", @path.length - 2).attr(style: "stroke-width: #{1 / $rootScope.zoom}px")
+      Snap.select('#vertex').attr('id', '') if Snap.select('#vertex')
+      @vertex.attr('id', 'vertex')
     
     pathArray: ->
       @path = Snap.path.toAbsolute(@el.attr("path"))
@@ -639,10 +735,29 @@ window.app.factory 'Edit', ($rootScope) ->
     
     
     save: ->
+      console.log 'saving'
       if @el
         @el.attr("path", @path)
-        $rootScope.characters[$rootScope.char].paths = []
+        $rootScope.font.characters[$rootScope.char].paths = []
+        $rootScope.font.characters[$rootScope.char].absolutePaths = []
         for path in Snap.selectAll('#editor > g > path:not(.el-path)')
-          $rootScope.characters[$rootScope.char].paths.push(path.attr("path"))
+          $rootScope.font.characters[$rootScope.char].paths.push(Snap.parsePathString(path.attr("path")))
+          $rootScope.font.characters[$rootScope.char].absolutePaths.push(path.attr("path"))
+          
+        $rootScope.font.$update(
+          (u) ->
+            console.log u 
+            $rootScope.font.characters = angular.fromJson(u.characters)
+        )
+          
+    undo: ->
+      @undoCount--
+      @g.selectAll('*').remove()
+      for path, index in @undos[@undoCount].paths
+        @g.path(path).attr(class: "el#{index}")
+      
+      
+    redo: ->
+      console.log 'redo'
     
     
