@@ -1,3 +1,8 @@
 Ff::Application.routes.draw do
-  root to: 'pages#index'
+  devise_for :users
+  match 'download', to: "pages#download", via: :post
+  
+  resources :fonts
+  
+  root to: 'pages#landing'
 end

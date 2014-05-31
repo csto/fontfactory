@@ -1,12 +1,13 @@
 #sidebar
-  #logo
-    
+  {{tab}}
   %ul.list-unstyled
     %li
-      %a{href: '#settings', "ng-click" => "setTab('settings')", "ng-class" => "{current: tab == 'settings'}"} Settings
+      %a{href: '', "ng-click" => "setTab('settings')", "ng-class" => "{current: tab == 'settings'}"} Settings
     %li.active
-      %a{href: '#editor', "ng-click" => "setTab('editor')", "ng-class" => "{current: tab == 'editor'}"} Editor
+      %a{href: '', "ng-click" => "setTab('editor')", "ng-class" => "{current: tab == 'editor'}"} Editor
     %li
-      %a{href: '#kerning', "ng-click" => "setTab('kerning')", "ng-class" => "{current: tab == 'kerning'}"} Kerning
+      %a{href: '', "ng-click" => "setTab('kerning')", "ng-class" => "{current: tab == 'kerning'}"} Kerning
     %li
-      Download
+      = form_tag download_path do
+        %input{type: 'hidden', name: "characters", "value" => "{{characters}}"}
+        = submit_tag 'Download'

@@ -1,14 +1,13 @@
-# require jquery
-# require jquery_ujs
 #= require angular
+#= require angular-ujs
 #= require angular-resource
+#= require angular-route
 #= require angular-hotkeys
 #= require turbolinks
 #= require snap
-#= require flatten
-# require bootstrap
 #= require characters
-#= require_tree .
+#= require angular-ui-bootstrap
+#= require_tree
 
 
 

@@ -1,4 +1,6 @@
-.tab-content{"ng-controller" => "appCtrl"}
+= render 'layouts/sidebar'
+
+.tab-content{"ng-controller" => "appCtrl", "ng-init" => "fontId=#{@font.id}"}
   %hotkey{bind: "q", invoke: "setTool('select')"}
   %hotkey{bind: "w", invoke: "setTool('direct')"}
   %hotkey{bind: "e", invoke: "setTool('pen')"}
@@ -6,31 +8,31 @@
   %hotkey{bind: "t", invoke: "setTool('pan')"}
   %hotkey{bind: "ctrl + z", invoke: "undo()"}
   %hotkey{bind: "ctrl + shift + z", invoke: "redo()"}
-  #settings.tab-pane{"ng-class" => "{active: tab == 'settings'}"}
+  #font.tab-pane{"ng-class" => "{active: tab == 'settings'}"}
     .form-group
       %label Name
-      %input#name.form-control{type: 'text', "ng-model" => "settings.name"}
+      %input#name.form-control{type: 'text', "ng-model" => "font.name", "ng-change" => "update()"}
     .form-group
       %label Grid
-      %input#grid.form-control{type: 'number', "ng-model" => "settings.grid", "ng-change" => "createGrid()"}
+      %input#grid.form-control{type: 'number', "ng-model" => "font.grid", "ng-change" => "update(); createGrid()"}
     .form-group
       %label X-Height
-      %input#x-height.form-control{type: 'number', "ng-model" => "settings.xHeight", "ng-change" => "createGrid()"}
+      %input#x-height.form-control{type: 'number', "ng-model" => "font.x_height", "ng-change" => "update(); createGrid()"}
     .form-group
       %label Overshoot
-      %input#overshoot.form-control{type: 'number', "ng-model" => "settings.overshoot", "ng-change" => "createGrid()"}
+      %input#overshoot.form-control{type: 'number', "ng-model" => "font.overshoot", "ng-change" => "update(); createGrid()"}
     .form-group
       %label Ascent Height
-      %input#ascent-height.form-control{type: 'number', "ng-model" => "settings.ascentHeight", "ng-change" => "createGrid()", min: 0, max: 1000}
+      %input#ascent-height.form-control{type: 'number', "ng-model" => "font.ascent_height", "ng-change" => "update(); createGrid()", min: 0, max: 1000}
     .form-group
       %label Descent Height
-      %input#descent-height.form-control{type: 'number', "value" => "{{1000 - settings.ascentHeight}}", disabled: true}
+      %input#descent-height.form-control{type: 'number', "value" => "{{1000 - font.ascent_height}}", disabled: true}
     .form-group
       %label Total Height
       %input#total-height.form-control{type: 'number', value: 1000, disabled: true}
     .form-group
       %label Line Gap
-      %input#line-gap.form-control{type: 'number', "ng-model" => "settings.lineGap", "ng-change" => "createGrid()"}
+      %input#line-gap.form-control{type: 'number', "ng-model" => "font.line_gap", "ng-change" => "update(); createGrid()"}
   
   #editor-wrapper.tab-pane{class: "{{tool}}", "ng-class" => "{active: tab == 'editor', 'pen-add': penClass == 'pen-add', 'pen-remove': penClass == 'pen-remove'}"}
     #click-box{"ng-mousedown" => "mousedown($event)", "ng-mousemove" => "mousemove($event)", "ng-mouseup" => "mouseup($event)"}
@@ -48,7 +50,7 @@
         #zoom.zoom {{(zoom * 100) + '%'}}
     
     #characters
-      %div{"ng-repeat" => "c in characters"}
+      %div{"ng-repeat" => "c in font.characters"}
         .character{"ng-click" => "setChar($index)", "ng-class" => "{current: char == $index}"}
           %div{"ng-if" => "c.paths"}
             %svg{width: '40px', height: '40px', "viewBox" => '0 0 1000 1000'}
@@ -60,7 +62,9 @@
   #kerning.tab-pane{"ng-class" => "{active: tab == 'kerning'}"}
     #header
       %input{type: 'text', "ng-model" => "kern.characters", "ng-change" => "updateKern(kern.characters)"}
+      %input{type: 'number', "ng-model" => "kernSize", "ng-change" => "updateSize(kernSize)"}
     %svg#kern
+    / {"ng-attr-height" => "{{kernHeight || '40px'}}", "viewBox" => "0 0 1000 1000"}
     
     
     

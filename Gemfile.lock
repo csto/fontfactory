@@ -27,8 +27,12 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.1)
       tzinfo (~> 1.1)
+    angular-ui-bootstrap-rails (0.11.0)
+    angular-ujs (0.4.13)
+      railties (>= 3.1)
     angularjs-rails (1.2.16)
     arel (5.0.1.20140414130214)
+    bcrypt (3.1.7)
     bootstrap-sass (3.1.1.1)
       sass (~> 3.2)
     builder (3.2.2)
@@ -48,6 +52,12 @@ GEM
       compass (>= 0.12.2)
       sprockets (<= 2.11.0)
     daemons (1.1.9)
+    devise (3.2.4)
+      bcrypt (~> 3.0)
+      orm_adapter (~> 0.1)
+      railties (>= 3.2.6, < 5)
+      thread_safe (~> 0.1)
+      warden (~> 1.2.3)
     erubis (2.7.0)
     eventmachine (1.0.3)
     execjs (2.0.2)
@@ -73,8 +83,11 @@ GEM
     mime-types (1.25.1)
     minitest (5.3.3)
     multi_json (1.10.0)
+    orm_adapter (0.5.0)
     pg (0.17.1)
     polyglot (0.3.4)
+    quiet_assets (1.0.2)
+      railties (>= 3.1, < 5.0)
     rack (1.5.2)
     rack-test (0.6.2)
       rack (>= 1.0)
@@ -126,19 +139,25 @@ GEM
     uglifier (2.5.0)
       execjs (>= 0.3.0)
       json (>= 1.8.0)
+    warden (1.2.3)
+      rack (>= 1.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  angular-ui-bootstrap-rails
+  angular-ujs
   angularjs-rails
   bootstrap-sass
   coffee-rails (~> 4.0.0)
   compass-rails
+  devise
   font-awesome-rails
   haml-rails
   jbuilder (~> 1.2)
   pg
+  quiet_assets
   rails (= 4.1.1)
   sass-rails (~> 4.0.0)
   thin

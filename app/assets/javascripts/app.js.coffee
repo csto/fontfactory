@@ -1,27 +1,68 @@
-window.app = angular.module('app', ['drahak.hotkeys'])
+window.app = angular.module('app', ['angular.ujs', 'ngResource', 'drahak.hotkeys', "ui.bootstrap"])
+
+window.app.factory 'Font', ($resource) ->
+  $resource(
+    "/fonts/:id.json", 
+    {id: "@id"},
+    {
+      get:
+        isArray: false
+        transformResponse: (data, headersGetter) ->
+          data = angular.fromJson(data)
+          chars = angular.fromJson(data.characters)
+          data.characters = chars
+          return data
+          
+      update: 
+        method: "PATCH"
+    }
+  )
 
 window.app.controller 'tabCtrl', ($scope) ->
   $scope.tab = 'editor'
   
   $scope.setTab = (tab) ->
     $scope.tab = tab
-
-window.app.controller 'appCtrl', ($scope, $rootScope, $timeout, Edit) ->
-  $timeout ->
-    $rootScope.edit = new Edit(1)
+    
+dropdownCTRL = ($scope) ->
   
-  $rootScope.characters = window.characters
+  $scope.status = isopen: false
+  
+  $scope.toggleDropdown = ($event) ->
+    $event.preventDefault()
+    $event.stopPropagation()
+    $scope.status.isopen = not $scope.status.isopen
+
+window.app.controller 'appCtrl', ($scope, $rootScope, $timeout, Edit, Kern, Font) ->
+  
   $rootScope.char = 1
+  $rootScope.fontId = $scope.fontId
+  
+  $timeout ->
+    Font.get(id: $scope.fontId, (font) ->
+        $rootScope.font = font
+        $rootScope.edit = new Edit()
+        $rootScope.kern = new Kern()
+      )
+  
+  $scope.update = ->
+    $rootScope.font.$update(
+      (u) ->
+        $rootScope.font.characters = angular.fromJson(u.characters)
+    )
+  
+  $scope.createGrid = ->
+    $rootScope.edit.createGrid()
   
   $scope.setChar = (c) ->
     Snap.selectAll('#editor *').remove()
-    $rootScope.edit = new Edit(c)
+    $rootScope.char = c
+    $rootScope.edit = new Edit()
   
   $scope.setTool = (tool) ->
     $rootScope.edit.setTool(tool)
     
   $scope.setZoom = (z) ->
-    # newZoom = $rootScope.zoom * z
     $rootScope.edit.paperZoom(z)
     
   $scope.mousedown = (e) ->
@@ -32,6 +73,18 @@ window.app.controller 'appCtrl', ($scope, $rootScope, $timeout, Edit) ->
     
   $scope.mouseup = (e) ->
     $rootScope.edit.mouseup(e)
+    
+  $scope.undo = ->
+    $rootScope.edit.undo()
+    
+  $scope.redo = ->
+    $rootScope.edit.redo()
+    
+  $scope.updateKern = (letters) ->
+    $rootScope.kern.updateKern(letters)
+    
+  $scope.updateSize = (kernSize) ->
+    $rootScope.kern.updateSize(kernSize)
       
     
 angular.module('appFilters', ['appCtrl']).filter 'character', ->
